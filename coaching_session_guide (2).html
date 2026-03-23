@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Eric's Coaching Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=DM+Mono:wght@400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --ink:#1a1a18;--ink2:#3d3d38;--ink3:#7a7a72;--ink4:#b0afa6;
+  --paper:#f5f3ee;--paper2:#eceae3;--paper3:#e3e0d7;
+  --accent:#2d6a4f;--accent2:#40916c;--accent3:#d4e9de;
+  --amber:#ba7517;--amber2:#faeeda;
+  --red:#b84040;--red2:#f5e0e0;
+  --blue:#185fa5;--blue2:#e6f1fb;
+  --r:10px;
+}
+html,body{height:100%;background:var(--paper);color:var(--ink);font-family:'DM Sans',sans-serif;font-size:16px}
+
+/* ── App shell ── */
+.app{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+
+/* ── Topbar ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#fff;border-bottom:1px solid var(--paper3);flex-shrink:0;position:sticky;top:0;z-index:10}
+.topbar-left{display:flex;align-items:center;gap:11px}
+.topbar-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#fff;font-family:'DM Mono',monospace;flex-shrink:0}
+.topbar-name{font-family:'Playfair Display',serif;font-size:18px;color:var(--ink);line-height:1}
+.topbar-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+.session-badge{font-size:11px;color:var(--ink3);background:var(--paper2);padding:4px 10px;border-radius:99px;white-space:nowrap}
+
+/* ── Tab bar ── */
+.tab-bar{display:flex;background:#fff;border-bottom:1px solid var(--paper3);overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0;scrollbar-width:none;position:sticky;top:65px;z-index:9}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{padding:12px 14px;font-size:12px;font-family:'DM Sans',sans-serif;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;color:var(--ink3);white-space:nowrap;flex-shrink:0;transition:color .15s;line-height:1}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+
+/* ── View body ── */
+.view-body{flex:1;overflow-y:auto;padding:20px 16px 40px;-webkit-overflow-scrolling:touch}
+.inner{max-width:640px;margin:0 auto}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:var(--r);border:1px solid var(--paper3);margin-bottom:14px;overflow:hidden}
+.card.active-card{border-color:var(--accent2);box-shadow:0 0 0 3px var(--accent3)}
+.card-head{padding:16px 18px 12px;display:flex;align-items:flex-start;gap:12px}
+.q-num{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:11px;flex-shrink:0;margin-top:1px}
+.card.active-card .q-num{background:var(--accent)}
+.q-label{font-family:'Playfair Display',serif;font-size:15px;line-height:1.3;color:var(--ink)}
+.q-sub{font-size:12px;color:var(--ink3);margin-top:3px;line-height:1.5}
+.card-body{padding:0 16px 16px}
+
+/* ── Inputs ── */
+.ta{width:100%;padding:11px 13px;font-size:15px;font-family:'DM Sans',sans-serif;line-height:1.65;border:1px solid var(--paper3);border-radius:8px;background:var(--paper);color:var(--ink);outline:none;resize:none;transition:border-color .2s;min-height:90px}
+.ta:focus{border-color:var(--accent2);background:#fff}
+.ta::placeholder{color:var(--ink4)}
+.inp{width:100%;padding:11px 13px;font-size:15px;font-family:'DM Sans',sans-serif;border:1px solid var(--paper3);border-radius:8px;background:var(--paper);color:var(--ink);outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
+.inp:focus{border-color:var(--accent2);background:#fff}
+.sel{width:100%;padding:11px 13px;font-size:15px;font-family:'DM Sans',sans-serif;border:1px solid var(--paper3);border-radius:8px;background:var(--paper);color:var(--ink);outline:none;-webkit-appearance:none;appearance:none}
+.sel:focus{border-color:var(--accent2);background:#fff}
+.lbl{display:block;font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.fg{margin-bottom:12px}
+.fg:last-child{margin-bottom:0}
+
+/* ── Priority rows ── */
+.prio-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.prio-row{display:flex;align-items:center;gap:8px}
+.prio-n{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);width:14px;flex-shrink:0;text-align:right}
+.prio-inp{flex:1;padding:11px 12px;font-size:15px;font-family:'DM Sans',sans-serif;border:1px solid var(--paper3);border-radius:8px;background:var(--paper);color:var(--ink);outline:none;transition:border-color .2s;min-width:0}
+.prio-inp:focus{border-color:var(--accent2);background:#fff}
+.prio-del{background:none;border:none;color:var(--ink4);cursor:pointer;font-size:18px;padding:4px 6px;line-height:1;flex-shrink:0;touch-action:manipulation}
+
+/* ── Buttons ── */
+.add-row-btn{font-size:13px;background:none;border:1px dashed var(--paper3);border-radius:8px;padding:10px 16px;color:var(--ink3);cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;text-align:center;touch-action:manipulation}
+.primary-btn{padding:13px 24px;font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500;background:var(--accent);color:#fff;border:none;border-radius:9px;cursor:pointer;touch-action:manipulation;width:100%}
+.primary-btn:active{background:var(--accent2)}
+.ghost-btn{padding:10px 18px;font-size:13px;font-family:'DM Sans',sans-serif;background:none;border:1px solid var(--paper3);border-radius:8px;cursor:pointer;color:var(--ink2);touch-action:manipulation}
+
+/* ── Save bar ── */
+.save-bar{display:flex;flex-direction:column;gap:10px;margin-top:6px;padding:14px 16px;background:#fff;border-radius:var(--r);border:1px solid var(--paper3)}
+.save-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.date-wrap{display:flex;align-items:center;gap:8px;flex:1}
+.date-lbl{font-size:12px;color:var(--ink3);white-space:nowrap}
+.date-inp{padding:9px 11px;font-size:13px;font-family:'DM Mono',monospace;border:1px solid var(--paper3);border-radius:7px;background:var(--paper);color:var(--ink);outline:none;flex:1;min-width:0;-webkit-appearance:none}
+.save-confirm{font-size:13px;color:var(--accent);font-weight:500;opacity:0;transition:opacity .4s;text-align:center}
+
+/* ── Notes & Actions tab ── */
+.notes-section{margin-bottom:20px}
+.notes-section-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--ink);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--paper3)}
+.action-item{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);padding:14px 16px;margin-bottom:10px;display:flex;align-items:flex-start;gap:12px}
+.action-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--paper3);flex-shrink:0;margin-top:2px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;transition:all .2s;touch-action:manipulation}
+.action-check.done{background:var(--accent);border-color:var(--accent)}
+.action-text{flex:1;font-size:14px;color:var(--ink2);line-height:1.5}
+.action-text.done{text-decoration:line-through;color:var(--ink4)}
+.action-meta{font-size:11px;color:var(--ink4);margin-top:3px}
+.action-del{background:none;border:none;color:var(--ink4);cursor:pointer;font-size:14px;flex-shrink:0;padding:2px 4px;touch-action:manipulation}
+.notes-entry{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);padding:14px 16px;margin-bottom:10px}
+.notes-entry-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink4);margin-bottom:6px;letter-spacing:.04em}
+.notes-entry-text{font-size:14px;line-height:1.7;color:var(--ink2)}
+.notes-entry-foot{display:flex;justify-content:flex-end;margin-top:10px}
+.del-btn{background:none;border:none;font-size:11px;color:var(--ink4);cursor:pointer;font-family:'DM Sans',sans-serif;touch-action:manipulation}
+.del-btn:active{color:var(--red)}
+
+/* ── Goals tab ── */
+.goal-section{margin-bottom:24px}
+.goal-section-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--ink);margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--paper3)}
+.goal-add-card{background:var(--paper);border:1.5px dashed var(--paper3);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.goal-add-lbl{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+.goal-entry-card{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);padding:16px;margin-bottom:10px}
+.goal-entry-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.goal-entry-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink4)}
+.goal-entry-text{font-size:14px;line-height:1.7;color:var(--ink2)}
+
+/* ── Projects tab ── */
+.proj-card{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.proj-name{font-size:15px;font-weight:500;color:var(--ink);margin-bottom:8px;line-height:1.3}
+.proj-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;align-items:center}
+.status-pill{display:inline-block;font-size:10px;font-weight:500;padding:3px 10px;border-radius:99px}
+.s-green{background:var(--accent3);color:var(--accent)}
+.s-amber{background:var(--amber2);color:var(--amber)}
+.s-red{background:var(--red2);color:var(--red)}
+.s-blue{background:var(--blue2);color:var(--blue)}
+.s-gray{background:var(--paper3);color:var(--ink3)}
+.proj-due{font-size:11px;color:var(--ink3);font-family:'DM Mono',monospace}
+.proj-field{margin-bottom:8px}
+.proj-field:last-child{margin-bottom:0}
+.proj-field-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);margin-bottom:2px}
+.proj-field-val{font-size:13px;color:var(--ink2);line-height:1.5}
+.proj-foot{display:flex;justify-content:flex-end;margin-top:12px;padding-top:10px;border-top:1px solid var(--paper3)}
+
+/* ── Delegation tab ── */
+.deleg-card{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.deleg-task{font-size:15px;font-weight:500;color:var(--ink);margin-bottom:8px}
+.deleg-field{margin-bottom:8px}
+.deleg-field:last-child{margin-bottom:0}
+.deleg-lbl{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);margin-bottom:2px}
+.deleg-val{font-size:13px;color:var(--ink2);line-height:1.5}
+.deleg-foot{display:flex;justify-content:flex-end;margin-top:12px;padding-top:10px;border-top:1px solid var(--paper3)}
+
+/* ── Habits tab ── */
+.habits-form{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);padding:18px;margin-bottom:16px}
+.habits-form-title{font-family:'Playfair Display',serif;font-size:15px;color:var(--ink);margin-bottom:14px}
+.habits-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.score-widget{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.score-dot{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--paper3);background:var(--paper);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;font-family:'DM Mono',monospace;color:var(--ink3);transition:all .15s;touch-action:manipulation}
+.score-dot.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+.habit-history-entry{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);margin-bottom:10px;overflow:hidden}
+.hh-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);padding:12px 16px 0;letter-spacing:.04em}
+.hh-grid{display:grid;grid-template-columns:1fr 1fr 1fr;border-top:1px solid var(--paper3);margin-top:10px}
+.hh-cell{padding:10px 14px;border-right:1px solid var(--paper3)}
+.hh-cell:nth-child(3n){border-right:none}
+.hh-cell:nth-child(n+4){border-top:1px solid var(--paper3)}
+.hh-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink4);margin-bottom:3px}
+.hh-val{font-size:14px;font-weight:500;color:var(--ink)}
+.score-bar-wrap{height:3px;background:var(--paper3);border-radius:99px;margin-top:4px;overflow:hidden}
+.score-bar-fill{height:100%;border-radius:99px;background:var(--accent2)}
+.hh-foot{display:flex;justify-content:flex-end;padding:6px 12px;background:var(--paper)}
+
+/* ── History tab ── */
+.tl{position:relative;padding-left:22px}
+.tl::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:1px;background:var(--paper3)}
+.tl-entry{position:relative;margin-bottom:22px}
+.tl-dot{position:absolute;left:-19px;top:5px;width:9px;height:9px;border-radius:50%;background:#fff;border:2px solid var(--accent2)}
+.tl-date{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);margin-bottom:7px;letter-spacing:.04em}
+.tl-card{background:#fff;border:1px solid var(--paper3);border-radius:var(--r);overflow:hidden}
+.tl-sec{padding:12px 16px;border-bottom:1px solid var(--paper3)}
+.tl-sec:last-child{border-bottom:none}
+.tl-sec-lbl{font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.tl-text{font-size:13px;line-height:1.7;color:var(--ink2)}
+.tl-prios{display:flex;flex-direction:column;gap:4px}
+.tl-prio{display:flex;align-items:flex-start;gap:7px;font-size:13px;color:var(--ink2);line-height:1.5}
+.tl-pn{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink4);padding-top:2px;flex-shrink:0}
+.tl-foot{display:flex;justify-content:flex-end;padding:6px 12px;background:var(--paper)}
+.tl-del{background:none;border:none;font-size:11px;color:var(--ink4);cursor:pointer;font-family:'DM Sans',sans-serif;touch-action:manipulation}
+
+.empty-tab{text-align:center;padding:50px 20px;color:var(--ink3)}
+.empty-icon{font-size:30px;margin-bottom:10px}
+.empty-txt{font-size:14px;line-height:1.7}
+
+/* ── Tab-header row ── */
+.tab-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tab-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--ink)}
+.add-btn{padding:9px 16px;font-size:12px;font-family:'DM Sans',sans-serif;font-weight:500;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;touch-action:manipulation}
+
+/* ── Modal ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(26,26,24,.55);z-index:300;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px 16px 0 0;padding:24px 20px 36px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.12)}
+@media(min-width:600px){
+  .overlay{align-items:center}
+  .modal{border-radius:16px;max-height:88vh;padding:28px}
+}
+.modal-title{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:16px}
+.modal-handle{width:36px;height:4px;background:var(--paper3);border-radius:99px;margin:0 auto 16px}
+.modal-footer{display:flex;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid var(--paper3)}
+.modal-cancel{flex:1;padding:12px;font-size:14px;font-family:'DM Sans',sans-serif;background:none;border:1px solid var(--paper3);border-radius:9px;cursor:pointer;color:var(--ink2);touch-action:manipulation}
+.modal-save{flex:2;padding:12px;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;background:var(--accent);color:#fff;border:none;border-radius:9px;cursor:pointer;touch-action:manipulation}
+
+/* ── Responsive tweaks ── */
+@media(max-width:400px){
+  .habits-grid{grid-template-columns:1fr}
+  .hh-grid{grid-template-columns:1fr 1fr}
+  .hh-cell:nth-child(3n){border-right:1px solid var(--paper3)}
+  .hh-cell:nth-child(2n){border-right:none}
+  .hh-cell:nth-child(n+3){border-top:1px solid var(--paper3)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-avatar">EV</div>
+      <div>
+        <div class="topbar-name">Eric</div>
+        <div class="topbar-sub">Coaching progress tracker</div>
+      </div>
+    </div>
+    <span class="session-badge" id="sessionBadge" style="display:none"></span>
+  </div>
+
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" onclick="switchTab('session',this)">▶ Session</button>
+    <button class="tab-btn" onclick="switchTab('goals',this)">🎯 Goals</button>
+    <button class="tab-btn" onclick="switchTab('projects',this)">📂 Projects</button>
+    <button class="tab-btn" onclick="switchTab('delegation',this)">🤝 Delegation</button>
+    <button class="tab-btn" onclick="switchTab('habits',this)">🔋 Habits</button>
+    <button class="tab-btn" onclick="switchTab('notes',this)">📝 Notes</button>
+    <button class="tab-btn" onclick="switchTab('history',this)">◷ History</button>
+  </div>
+
+  <div class="view-body">
+    <div class="inner" id="viewBody"></div>
+  </div>
+
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modalBox"></div></div>
+
+<script>
+const KEY='csg_v3';
+const ERIC_ID='eric_perm';
+let S={clients:[]};
+let curTab='session';
+let priorities=['','',''];
+let energyScore=0,attitudeScore=0;
+
+function load(){try{const d=localStorage.getItem(KEY);if(d)S=JSON.parse(d)}catch(e){}}
+function save(){localStorage.setItem(KEY,JSON.stringify(S))}
+function gc(){return S.clients.find(c=>c.id===ERIC_ID)}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function today(){return new Date().toISOString().slice(0,10)}
+function fmtDate(iso){if(!iso)return'';const d=new Date(iso+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+
+function initEric(){
+  load();
+  if(!gc()){
+    S.clients.push({id:ERIC_ID,name:'Eric',since:today(),
+      sessions:[],projects:[],delegations:[],habits:[],
+      monthlyGoals:[],weeklyGoals:[],notes:[],actions:[]});
+    save();
+  }
+  // migrate older records
+  const c=gc();
+  if(!c.notes)c.notes=[];
+  if(!c.actions)c.actions=[];
+  if(!c.monthlyGoals)c.monthlyGoals=[];
+  if(!c.weeklyGoals)c.weeklyGoals=[];
+  save();
+  updateBadge();
+  renderTab();
+}
+
+function updateBadge(){
+  const c=gc();
+  const n=(c.sessions||[]).length;
+  const badge=document.getElementById('sessionBadge');
+  if(n){badge.textContent=n+' session'+(n!==1?'s':'');badge.style.display='';}
+  else badge.style.display='none';
+}
+
+function switchTab(tab,btn){
+  curTab=tab;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  btn.scrollIntoView({inline:'center',behavior:'smooth'});
+  renderTab();
+}
+
+function renderTab(){
+  if(curTab==='session') renderSession();
+  else if(curTab==='notes') renderNotes();
+  else if(curTab==='goals') renderGoals();
+  else if(curTab==='projects') renderProjects();
+  else if(curTab==='delegation') renderDelegation();
+  else if(curTab==='habits') renderHabits();
+  else renderHistory();
+}
+
+// ═══════════════════════════════════════
+// SESSION
+// ═══════════════════════════════════════
+function renderSession(){
+  priorities=['','',''];
+  document.getElementById('viewBody').innerHTML=`
+    <div class="card active-card" id="q1card">
+      <div class="card-head">
+        <div class="q-num">1</div>
+        <div>
+          <div class="q-label">Wins &amp; progress</div>
+          <div class="q-sub">What progress or accomplishments since last session? What systems are working well?</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <textarea class="ta" id="inp_wins" placeholder="Type Eric's response here…" oninput="autoResize(this)" rows="3"></textarea>
+      </div>
+    </div>
+
+    <div class="card" id="q2card">
+      <div class="card-head">
+        <div class="q-num">2</div>
+        <div>
+          <div class="q-label">Planning</div>
+          <div class="q-sub">What are the 3–5 most important priorities for this week?</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="prio-list" id="prioList"></div>
+        <button class="add-row-btn" onclick="addPrio()">+ Add priority</button>
+      </div>
+    </div>
+
+    <div class="save-bar">
+      <div class="save-row">
+        <div class="date-wrap">
+          <span class="date-lbl">Date</span>
+          <input class="date-inp" type="date" id="sessionDate" value="${today()}">
+        </div>
+      </div>
+      <button class="primary-btn" onclick="saveSession()">Save session</button>
+      <div class="save-confirm" id="saveConfirm">Session saved ✓</div>
+    </div>`;
+  renderPrios();
+  document.getElementById('inp_wins').addEventListener('focus',()=>{
+    document.getElementById('q1card').classList.add('active-card');
+    document.getElementById('q2card').classList.remove('active-card');
+  });
+}
+
+function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px'}
+
+function renderPrios(){
+  const el=document.getElementById('prioList');if(!el)return;
+  el.innerHTML=priorities.map((p,i)=>`
+    <div class="prio-row">
+      <span class="prio-n">${i+1}.</span>
+      <input class="prio-inp" type="text" value="${esc(p)}" placeholder="Priority ${i+1}…"
+        oninput="priorities[${i}]=this.value"
+        onfocus="document.getElementById('q2card').classList.add('active-card');document.getElementById('q1card').classList.remove('active-card')">
+      ${priorities.length>1?`<button class="prio-del" onclick="removePrio(${i})">×</button>`:''}
+    </div>`).join('');
+}
+function addPrio(){if(priorities.length>=5)return;priorities.push('');renderPrios();const ins=document.querySelectorAll('.prio-inp');if(ins.length)ins[ins.length-1].focus()}
+function removePrio(i){priorities.splice(i,1);renderPrios()}
+
+function saveSession(){
+  const c=gc();
+  const wins=(document.getElementById('inp_wins').value||'').trim();
+  const prioList=priorities.filter(p=>p.trim());
+  const date=document.getElementById('sessionDate').value;
+  if(!wins&&!prioList.length)return;
+  c.sessions.push({date,wins,priorities:prioList});
+  save(); updateBadge();
+  const conf=document.getElementById('saveConfirm');
+  conf.style.opacity='1';
+  setTimeout(()=>{conf.style.opacity='0';},2400);
+  document.getElementById('inp_wins').value='';
+  document.getElementById('inp_wins').style.height='';
+  priorities=['','',''];renderPrios();
+  document.getElementById('sessionDate').value=today();
+  document.getElementById('q1card').classList.add('active-card');
+  document.getElementById('q2card').classList.remove('active-card');
+}
+
+// ═══════════════════════════════════════
+// NOTES & ACTION ITEMS
+// ═══════════════════════════════════════
+function renderNotes(){
+  const c=gc();
+  const notes=c.notes||[];
+  const actions=c.actions||[];
+  const openActions=actions.filter(a=>!a.done);
+  const doneActions=actions.filter(a=>a.done);
+
+  let html=`
+    <div class="notes-section">
+      <div class="tab-header">
+        <div class="notes-section-title" style="border:none;padding:0;margin:0">Session notes</div>
+        <button class="add-btn" onclick="openAddNote()">+ Add note</button>
+      </div>
+      <div style="height:12px"></div>`;
+
+  if(!notes.length){
+    html+=`<div class="empty-tab"><div class="empty-icon">📝</div><div class="empty-txt">No notes yet.<br>Add notes from any session.</div></div>`;
+  } else {
+    [...notes].reverse().forEach((n,ri)=>{
+      const realIdx=(notes.length-1)-ri;
+      html+=`<div class="notes-entry">
+        <div class="notes-entry-date">${fmtDate(n.date)}</div>
+        <div class="notes-entry-text">${esc(n.text).replace(/\n/g,'<br>')}</div>
+        <div class="notes-entry-foot"><button class="del-btn" onclick="deleteNote(${realIdx})">Delete</button></div>
+      </div>`;
+    });
+  }
+  html+=`</div>`;
+
+  html+=`
+    <div class="notes-section">
+      <div class="tab-header">
+        <div class="notes-section-title" style="border:none;padding:0;margin:0">Action items</div>
+        <button class="add-btn" onclick="openAddAction()">+ Add item</button>
+      </div>
+      <div style="height:12px"></div>`;
+
+  if(!actions.length){
+    html+=`<div class="empty-tab"><div class="empty-icon">✅</div><div class="empty-txt">No action items yet.<br>Add tasks for Eric to follow up on.</div></div>`;
+  } else {
+    if(openActions.length){
+      html+=`<div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Open</div>`;
+      actions.forEach((a,i)=>{
+        if(a.done)return;
+        html+=actionCard(a,i);
+      });
+    }
+    if(doneActions.length){
+      html+=`<div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--ink4);margin:14px 0 8px">Completed</div>`;
+      actions.forEach((a,i)=>{
+        if(!a.done)return;
+        html+=actionCard(a,i);
+      });
+    }
+  }
+  html+=`</div>`;
+
+  document.getElementById('viewBody').innerHTML=html;
+}
+
+function actionCard(a,i){
+  return`<div class="action-item">
+    <div class="action-check${a.done?' done':''}" onclick="toggleAction(${i})">${a.done?'✓':''}</div>
+    <div style="flex:1">
+      <div class="action-text${a.done?' done':''}">${esc(a.text)}</div>
+      ${a.due?`<div class="action-meta">Due ${fmtDate(a.due)}</div>`:''}
+    </div>
+    <button class="action-del" onclick="deleteAction(${i})">✕</button>
+  </div>`;
+}
+
+function toggleAction(i){const c=gc();c.actions[i].done=!c.actions[i].done;save();renderNotes()}
+function deleteAction(i){const c=gc();c.actions.splice(i,1);save();renderNotes()}
+function deleteNote(i){const c=gc();c.notes.splice(i,1);save();renderNotes()}
+
+function openAddNote(){
+  openModal(`<div class="modal-handle"></div>
+    <div class="modal-title">Add session note</div>
+    <div class="fg"><label class="lbl">Note</label><textarea class="ta" id="n_text" placeholder="What came up in this session?" rows="4"></textarea></div>
+    <div class="fg"><label class="lbl">Date</label><input class="inp" type="date" id="n_date" value="${today()}"></div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveNote()">Save note</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('n_text')&&document.getElementById('n_text').focus(),100);
+}
+function saveNote(){
+  const text=(document.getElementById('n_text').value||'').trim();if(!text)return;
+  const date=document.getElementById('n_date').value;
+  const c=gc();c.notes.push({text,date});save();closeModal();renderNotes();
+}
+
+function openAddAction(){
+  openModal(`<div class="modal-handle"></div>
+    <div class="modal-title">Add action item</div>
+    <div class="fg"><label class="lbl">Action</label><input class="inp" id="a_text" placeholder="What does Eric need to do?" autofocus></div>
+    <div class="fg"><label class="lbl">Due date (optional)</label><input class="inp" type="date" id="a_due"></div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveAction()">Add item</button>
+    </div>`);
+  setTimeout(()=>document.getElementById('a_text')&&document.getElementById('a_text').focus(),100);
+}
+function saveAction(){
+  const text=(document.getElementById('a_text').value||'').trim();if(!text)return;
+  const due=document.getElementById('a_due').value;
+  const c=gc();c.actions.push({text,due,done:false});save();closeModal();renderNotes();
+}
+
+// ═══════════════════════════════════════
+// GOALS
+// ═══════════════════════════════════════
+function renderGoals(){
+  const c=gc();
+  function goalCards(goals,type){
+    return goals.length?[...goals].reverse().map((g,ri)=>{
+      const realIdx=(goals.length-1)-ri;
+      return`<div class="goal-entry-card">
+        <div class="goal-entry-hdr">
+          <div class="goal-entry-date">${fmtDate(g.date)}</div>
+          <button class="del-btn" onclick="deleteGoal('${type}',${realIdx})">Delete</button>
+        </div>
+        <div class="goal-entry-text">${esc(g.text).replace(/\n/g,'<br>')}</div>
+      </div>`;
+    }).join(''):`<div style="font-size:13px;color:var(--ink4);padding:4px 2px;margin-bottom:10px">No ${type} goals set yet.</div>`;
+  }
+
+  document.getElementById('viewBody').innerHTML=`
+    <div class="goal-section">
+      <div class="goal-section-title">Monthly goal</div>
+      <div class="goal-add-card">
+        <div class="goal-add-lbl">Set monthly goal</div>
+        <textarea class="ta" id="monthly_txt" placeholder="What does Eric want to achieve this month?" rows="3"></textarea>
+        <div style="margin-top:10px"><button class="primary-btn" onclick="saveGoal('monthly')">Save monthly goal</button></div>
+      </div>
+      ${goalCards(c.monthlyGoals||[],'monthly')}
+    </div>
+    <div class="goal-section">
+      <div class="goal-section-title">Weekly goal</div>
+      <div class="goal-add-card">
+        <div class="goal-add-lbl">Set weekly goal</div>
+        <textarea class="ta" id="weekly_txt" placeholder="What does Eric want to focus on this week?" rows="3"></textarea>
+        <div style="margin-top:10px"><button class="primary-btn" onclick="saveGoal('weekly')">Save weekly goal</button></div>
+      </div>
+      ${goalCards(c.weeklyGoals||[],'weekly')}
+    </div>`;
+}
+
+function saveGoal(type){
+  const c=gc();
+  const el=document.getElementById(type+'_txt');
+  const text=(el.value||'').trim();if(!text)return;
+  if(type==='monthly')c.monthlyGoals.push({text,date:today()});
+  else c.weeklyGoals.push({text,date:today()});
+  save();renderGoals();
+}
+function deleteGoal(type,i){
+  const c=gc();
+  if(type==='monthly')c.monthlyGoals.splice(i,1);
+  else c.weeklyGoals.splice(i,1);
+  save();renderGoals();
+}
+
+// ═══════════════════════════════════════
+// PROJECTS
+// ═══════════════════════════════════════
+function renderProjects(){
+  const c=gc();
+  const projects=c.projects||[];
+  const statusMap={'On track':'s-green','At risk':'s-amber','Stalled':'s-red','Complete':'s-blue','Not started':'s-gray'};
+  let html=`<div class="tab-header"><div class="tab-title">Projects</div><button class="add-btn" onclick="openAddProject()">+ Add</button></div>`;
+  if(!projects.length){
+    html+=`<div class="empty-tab"><div class="empty-icon">📂</div><div class="empty-txt">No projects yet.<br>Add a project to start tracking.</div></div>`;
+  } else {
+    projects.forEach((p,i)=>{
+      const cls=statusMap[p.status]||'s-gray';
+      html+=`<div class="proj-card">
+        <div class="proj-name">${esc(p.name)}</div>
+        <div class="proj-meta">
+          ${p.status?`<span class="status-pill ${cls}">${esc(p.status)}</span>`:''}
+          ${p.due?`<span class="proj-due">${fmtDate(p.due)}</span>`:''}
+        </div>
+        ${p.nextAction?`<div class="proj-field"><div class="proj-field-lbl">Next action</div><div class="proj-field-val">${esc(p.nextAction)}</div></div>`:''}
+        ${p.owner?`<div class="proj-field"><div class="proj-field-lbl">Owner</div><div class="proj-field-val">${esc(p.owner)}</div></div>`:''}
+        ${p.delegated?`<div class="proj-field"><div class="proj-field-lbl">Being delegated</div><div class="proj-field-val">${esc(p.delegated)}</div></div>`:''}
+        <div class="proj-foot"><button class="del-btn" onclick="deleteProject(${i})">Delete</button></div>
+      </div>`;
+    });
+  }
+  document.getElementById('viewBody').innerHTML=html;
+}
+function deleteProject(i){const c=gc();c.projects.splice(i,1);save();renderProjects()}
+function openAddProject(){
+  openModal(`<div class="modal-handle"></div>
+    <div class="modal-title">Add project</div>
+    <div class="fg"><label class="lbl">Project name</label><input class="inp" id="p_name" placeholder="e.g. Q3 product launch"></div>
+    <div class="fg"><label class="lbl">Due date</label><input class="inp" type="date" id="p_due"></div>
+    <div class="fg"><label class="lbl">Status</label>
+      <select class="sel" id="p_status"><option value="">Select…</option><option>On track</option><option>At risk</option><option>Stalled</option><option>Complete</option><option>Not started</option></select></div>
+    <div class="fg"><label class="lbl">Next action</label><input class="inp" id="p_next" placeholder="Immediate next step"></div>
+    <div class="fg"><label class="lbl">Owner</label><input class="inp" id="p_owner" placeholder="Who's responsible?"></div>
+    <div class="fg"><label class="lbl">What's being delegated</label><textarea class="ta" id="p_deleg" placeholder="Any parts being handed off?" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveProject()">Add project</button>
+    </div>`);
+}
+function saveProject(){
+  const name=(document.getElementById('p_name').value||'').trim();if(!name)return;
+  const c=gc();
+  c.projects.push({name,due:document.getElementById('p_due').value,status:document.getElementById('p_status').value,nextAction:(document.getElementById('p_next').value||'').trim(),owner:(document.getElementById('p_owner').value||'').trim(),delegated:(document.getElementById('p_deleg').value||'').trim()});
+  save();closeModal();renderProjects();
+}
+
+// ═══════════════════════════════════════
+// DELEGATION
+// ═══════════════════════════════════════
+function renderDelegation(){
+  const c=gc();
+  const items=c.delegations||[];
+  let html=`<div class="tab-header"><div class="tab-title">Delegation</div><button class="add-btn" onclick="openAddDelegation()">+ Add</button></div>`;
+  if(!items.length){
+    html+=`<div class="empty-tab"><div class="empty-icon">🤝</div><div class="empty-txt">No delegation items yet.<br>Add tasks that could be handed off.</div></div>`;
+  } else {
+    items.forEach((d,i)=>{
+      html+=`<div class="deleg-card">
+        <div class="deleg-task">${esc(d.task)}</div>
+        ${d.who?`<div class="deleg-field"><div class="deleg-lbl">Who could own it</div><div class="deleg-val">${esc(d.who)}</div></div>`:''}
+        ${d.outcome?`<div class="deleg-field"><div class="deleg-lbl">Desired outcome</div><div class="deleg-val">${esc(d.outcome)}</div></div>`:''}
+        <div class="deleg-foot"><button class="del-btn" onclick="deleteDelegation(${i})">Delete</button></div>
+      </div>`;
+    });
+  }
+  document.getElementById('viewBody').innerHTML=html;
+}
+function deleteDelegation(i){const c=gc();c.delegations.splice(i,1);save();renderDelegation()}
+function openAddDelegation(){
+  openModal(`<div class="modal-handle"></div>
+    <div class="modal-title">Add delegation item</div>
+    <div class="fg"><label class="lbl">Task to delegate</label><textarea class="ta" id="d_task" placeholder="What task could be delegated?" rows="2"></textarea></div>
+    <div class="fg"><label class="lbl">Who could own it</label><input class="inp" id="d_who" placeholder="Name or role"></div>
+    <div class="fg"><label class="lbl">Desired outcome</label><textarea class="ta" id="d_outcome" placeholder="What result do you want?" rows="2"></textarea></div>
+    <div class="modal-footer">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveDelegation()">Add item</button>
+    </div>`);
+}
+function saveDelegation(){
+  const task=(document.getElementById('d_task').value||'').trim();if(!task)return;
+  const c=gc();
+  c.delegations.push({task,who:(document.getElementById('d_who').value||'').trim(),outcome:(document.getElementById('d_outcome').value||'').trim()});
+  save();closeModal();renderDelegation();
+}
+
+// ═══════════════════════════════════════
+// HABITS
+// ═══════════════════════════════════════
+function renderHabits(){
+  energyScore=0;attitudeScore=0;
+  const c=gc();
+  const entries=c.habits||[];
+
+  let histHtml='';
+  if(entries.length){
+    histHtml+=`<div style="font-family:'Playfair Display',serif;font-size:15px;color:var(--ink);margin-bottom:12px">History</div>`;
+    [...entries].reverse().forEach((h,ri)=>{
+      const realIdx=(entries.length-1)-ri;
+      histHtml+=`<div class="habit-history-entry">
+        <div class="hh-date">${fmtDate(h.date)}</div>
+        <div class="hh-grid">
+          ${hhCell('Bedtime',h.bedtime||'—')}
+          ${hhCell('Avg sleep',h.sleep?h.sleep+'h':'—')}
+          ${hhCell('Exercised',h.exercise!==undefined&&h.exercise!==''?h.exercise+'x':'—')}
+          ${hhCell('Cooked',h.diet!==undefined&&h.diet!==''?h.diet+'x':'—')}
+          ${hhScoreCell('Energy',h.energy)}
+          ${hhScoreCell('Attitude',h.attitude)}
+        </div>
+        <div class="hh-foot"><button class="del-btn" onclick="deleteHabit(${realIdx})">Delete</button></div>
+      </div>`;
+    });
+  }
+
+  document.getElementById('viewBody').innerHTML=`
+    <div class="habits-form">
+      <div class="habits-form-title">Log this week</div>
+      <div class="habits-grid">
+        <div class="fg"><label class="lbl">Average bedtime</label><input class="inp" id="h_bedtime" placeholder="e.g. 11:00 PM"></div>
+        <div class="fg"><label class="lbl">Avg sleep (hrs)</label><input class="inp" id="h_sleep" type="number" min="0" max="12" step=".5" placeholder="7.5"></div>
+        <div class="fg"><label class="lbl">Times exercised</label><input class="inp" id="h_exercise" type="number" min="0" max="14" step="1" placeholder="e.g. 3"></div>
+        <div class="fg"><label class="lbl">Times cooked</label><input class="inp" id="h_diet" type="number" min="0" max="21" step="1" placeholder="e.g. 4"></div>
+      </div>
+      <div class="fg">
+        <label class="lbl">Energy level (1–10)</label>
+        <div class="score-widget" id="energyWidget">${scoreHtml('energy',0)}</div>
+      </div>
+      <div class="fg" style="margin-top:12px">
+        <label class="lbl">Positive attitude (1–10)</label>
+        <div class="score-widget" id="attitudeWidget">${scoreHtml('attitude',0)}</div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="fg"><label class="lbl">Week of</label><input class="inp date-inp" type="date" id="h_date" value="${today()}" style="max-width:200px"></div>
+        <button class="primary-btn" onclick="saveHabits()" style="margin-top:10px">Save</button>
+        <div class="save-confirm" id="habitConfirm" style="margin-top:8px">Saved ✓</div>
+      </div>
+    </div>
+    ${histHtml}`;
+}
+
+function scoreHtml(type,sel){
+  return Array.from({length:10},(_,i)=>i+1).map(n=>
+    `<div class="score-dot${sel===n?' sel':''}" onclick="setScore('${type}',${n})">${n}</div>`
+  ).join('');
+}
+function setScore(type,val){
+  if(type==='energy')energyScore=val;else attitudeScore=val;
+  const el=document.getElementById(type+'Widget');
+  if(el)el.innerHTML=scoreHtml(type,val);
+}
+function hhCell(lbl,val){return`<div class="hh-cell"><div class="hh-lbl">${lbl}</div><div class="hh-val">${esc(String(val))}</div></div>`}
+function hhScoreCell(lbl,val){
+  const v=parseInt(val)||0;
+  return`<div class="hh-cell"><div class="hh-lbl">${lbl}</div><div class="hh-val">${v?v+'/10':'—'}</div>${v?`<div class="score-bar-wrap"><div class="score-bar-fill" style="width:${v*10}%"></div></div>`:''}</div>`;
+}
+function saveHabits(){
+  const c=gc();
+  const bedtime=(document.getElementById('h_bedtime').value||'').trim();
+  const sleep=document.getElementById('h_sleep').value;
+  const exercise=document.getElementById('h_exercise').value;
+  const diet=document.getElementById('h_diet').value;
+  const date=document.getElementById('h_date').value;
+  if(!bedtime&&!sleep&&!exercise&&!diet&&!energyScore&&!attitudeScore)return;
+  c.habits.push({date,bedtime,sleep,exercise,diet,energy:energyScore||'',attitude:attitudeScore||''});
+  save();
+  const conf=document.getElementById('habitConfirm');
+  conf.style.opacity='1';
+  setTimeout(()=>{conf.style.opacity='0';renderHabits();},1200);
+}
+function deleteHabit(i){const c=gc();c.habits.splice(i,1);save();renderHabits()}
+
+// ═══════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════
+function renderHistory(){
+  const c=gc();
+  const sessions=[...(c.sessions||[])].reverse();
+  if(!sessions.length){
+    document.getElementById('viewBody').innerHTML=`<div class="empty-tab"><div class="empty-icon">◌</div><div class="empty-txt">No sessions logged yet.<br>Use the Session tab to get started.</div></div>`;
+    return;
+  }
+  let html=`<div class="tl">`;
+  sessions.forEach((s,ri)=>{
+    const realIdx=(c.sessions.length-1)-ri;
+    html+=`<div class="tl-entry">
+      <div class="tl-dot"></div>
+      <div class="tl-date">${fmtDate(s.date)}</div>
+      <div class="tl-card">`;
+    if(s.wins) html+=`<div class="tl-sec"><div class="tl-sec-lbl">Wins &amp; progress</div><div class="tl-text">${esc(s.wins).replace(/\n/g,'<br>')}</div></div>`;
+    if(s.priorities&&s.priorities.filter(p=>p.trim()).length){
+      const rows=s.priorities.filter(p=>p.trim()).map((p,i)=>`<div class="tl-prio"><span class="tl-pn">${i+1}.</span>${esc(p)}</div>`).join('');
+      html+=`<div class="tl-sec"><div class="tl-sec-lbl">Priorities</div><div class="tl-prios">${rows}</div></div>`;
+    }
+    html+=`<div class="tl-foot"><button class="tl-del" onclick="deleteSession(${realIdx})">Delete</button></div></div></div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('viewBody').innerHTML=html;
+}
+function deleteSession(i){const c=gc();c.sessions.splice(i,1);save();updateBadge();renderHistory()}
+
+// ═══════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════
+function openModal(html){document.getElementById('modalBox').innerHTML=html;document.getElementById('overlay').classList.add('open')}
+function closeModal(){document.getElementById('overlay').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target===document.getElementById('overlay'))closeModal()});
+
+// Init
+initEric();
+</script>
+</body>
+</html>
